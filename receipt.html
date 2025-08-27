@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>سند قبض - مدرسة قمة المعرفة الأهلية</title>
+  <style>
+    :root {
+      --primary: #0f766e; /* teal-700 */
+      --accent: #134e4a;  /* teal-900 */
+      --ink: #0b1620;
+      --muted: #6b7280;  /* gray-500 */
+      --line: #e5e7eb;   /* gray-200 */
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: "Tahoma", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+      margin: 0; padding: 24px; color: var(--ink); background: #fff;
+    }
+    .receipt {
+      max-width: 900px; margin: 0 auto; background: white; border: 1px solid var(--line);
+      border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.06);
+    }
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--accent)); color: white;
+      padding: 22px 24px; display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center;
+    }
+    .brand h1 { margin: 0; font-size: 22px; letter-spacing: .5px; }
+    .brand small { opacity: .9; }
+    .meta {
+      background: rgba(255,255,255,.12); border-radius: 10px; padding: 12px 14px; font-size: 14px; line-height: 1.6;
+    }
+    .meta div { display: flex; gap: 8px; justify-content: space-between; }
+    .body { padding: 22px 24px; }
+    .title { font-size: 18px; margin: 0 0 12px; color: var(--accent); }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+    .card { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: #fff; }
+    .field { display: grid; grid-template-columns: 160px 1fr; gap: 10px; padding: 10px 0; align-items: center; }
+    .field + .field { border-top: 1px dashed var(--line); }
+    .label { color: var(--muted); font-size: 14px; }
+    .value { font-weight: 600; font-size: 16px; }
+    .amount-box { text-align: center; border: 2px dashed var(--primary); border-radius: 14px; padding: 16px; }
+    .amount-box .value { font-size: 24px; }
+    .notes { min-height: 60px; white-space: pre-wrap; }
+    footer { padding: 18px 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: end; }
+    .sign { text-align: center; }
+    .sign .line { height: 1px; background: var(--line); margin: 40px 0 6px; }
+    .actions { padding: 16px 24px; display: flex; gap: 8px; justify-content: flex-start; }
+    button { border: 0; background: var(--primary); color: white; padding: 10px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+    button.secondary { background: #f3f4f6; color: #111827; border: 1px solid var(--line); }
+
+    @media print {
+      body { padding: 0; }
+      .actions { display: none; }
+      .receipt { box-shadow: none; border: none; border-radius: 0; }
+      @page { size: A4; margin: 14mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="actions no-print">
+    <button onclick="window.print()">🖨️ طباعة السند</button>
+    <button class="secondary" onclick="location.href=location.origin+location.pathname">🔄 مسح البيانات</button>
+  </div>
+
+  <section class="receipt" id="receipt">
+    <header>
+      <div class="brand">
+        <h1>مدرسة قمة المعرفة الأهلية</h1>
+        <small>سند قبض رسمي</small>
+      </div>
+      <div class="meta">
+        <div><strong>رقم السند:</strong><span id="r-invoice">—</span></div>
+        <div><strong>التاريخ:</strong><span id="r-date">—</span></div>
+      </div>
+    </header>
+
+    <div class="body">
+      <h2 class="title">بيانات السند</h2>
+      <div class="grid">
+        <div class="card" style="grid-column: span 8;">
+          <div class="field">
+            <div class="label">اسم الطالب/ـة</div>
+            <div class="value" id="r-child">—</div>
+          </div>
+          <div class="field">
+            <div class="label">اسم ولي الأمر</div>
+            <div class="value" id="r-guardian">—</div>
+          </div>
+          <div class="field">
+            <div class="label">طريقة السداد</div>
+            <div class="value" id="r-method">—</div>
+          </div>
+          <div class="field">
+            <div class="label">ملاحظات</div>
+            <div class="value notes" id="r-note">—</div>
+          </div>
+        </div>
+        <div class="card amount-box" style="grid-column: span 4;">
+          <div class="label">المبلغ المستلم (ريال سعودي)</div>
+          <div class="value" id="r-amount">0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="sign">
+        <div class="line"></div>
+        <div>المستلم</div>
+      </div>
+      <div class="sign">
+        <div class="line"></div>
+        <div>ختم المدرسة</div>
+      </div>
+      <div class="sign">
+        <div class="line"></div>
+        <div>المحاسب/ـة</div>
+      </div>
+    </footer>
+  </section>
+
+  <script>
+    // قراءة بارامترات الرابط
+    const params = new URLSearchParams(location.search);
+    const val = (k, d='') => {
+      const v = params.get(k);
+      return (v === null || v === '') ? d : decodeURIComponent(v);
+    };
+
+    // تنسيق مبالغ
+    const fmtMoney = (num) => {
+      const n = Number(num);
+      if (!isFinite(n)) return num;
+      return n.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    // إنشاء رقم سند تلقائي إن لم يُمرَّر
+    const makeInvoice = () => {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth()+1).padStart(2,'0');
+      const d = String(now.getDate()).padStart(2,'0');
+      const rnd = Math.floor(1000 + Math.random()*9000);
+      return `QMA-${y}${m}${d}-${rnd}`; // مثال: QMA-20250827-4821
+    };
+
+    // تنسيق التاريخ (افتراضي: اليوم)
+    const todayISO = () => {
+      const t = new Date();
+      const y = t.getFullYear();
+      const m = String(t.getMonth()+1).padStart(2, '0');
+      const d = String(t.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+
+    // تعبئة الحقول
+    const data = {
+      child:   val('child',   '—'),
+      guardian:val('guardian','—'),
+      amount:  val('amount',  '0'),
+      date:    val('date',    todayISO()),
+      method:  val('method',  'تحويل بنكي'),
+      invoice: val('invoice', makeInvoice()),
+      note:    val('note',    '')
+    };
+
+    document.getElementById('r-child').textContent    = data.child;
+    document.getElementById('r-guardian').textContent = data.guardian;
+    document.getElementById('r-method').textContent   = data.method;
+    document.getElementById('r-note').textContent     = data.note || '—';
+    document.getElementById('r-invoice').textContent  = data.invoice;
+    document.getElementById('r-date').textContent     = data.date;
+    document.getElementById('r-amount').textContent   = fmtMoney(data.amount);
+
+    // خيار: الطباعة التلقائية عند وجود بارامترات (يمكن تعليق السطر التالي إن لم ترغب بذلك)
+    if (location.search) {
+      // انتظر لحظات ليتحقق العرض ثم اطبع
+      setTimeout(()=>window.print(), 350);
+    }
+  </script>
+</body>
+</html>
