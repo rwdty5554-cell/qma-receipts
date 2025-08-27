@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title><?= r-invoice ?></title>
+  <title>سند</title>
   <style>
     :root {
       --primary: #0f766e;
@@ -170,6 +170,27 @@
     if (location.search) {
       setTimeout(()=>window.print(), 350);
     }
+  </script>
+  <script>
+    // Function to update document title with invoice number
+    function updateTitle() {
+      const invoiceElement = document.getElementById('r-invoice');
+      if (invoiceElement && invoiceElement.textContent !== '—') {
+        document.title = invoiceElement.textContent;
+      }
+    }
+    
+    // Update title when page loads
+    document.addEventListener('DOMContentLoaded', updateTitle);
+    
+    // Watch for changes to the invoice number
+    const observer = new MutationObserver(updateTitle);
+    document.addEventListener('DOMContentLoaded', function() {
+      const invoiceElement = document.getElementById('r-invoice');
+      if (invoiceElement) {
+        observer.observe(invoiceElement, { childList: true, subtree: true });
+      }
+    });
   </script>
 </body>
 </html>
